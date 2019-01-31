@@ -34,11 +34,13 @@
 */
 float distance(int* a,int* b);
 
-void assign_centroid(int n,int k,int* data_points,int* cluster_points,int* centroids);
+void assign_centroid(int n,int k,int* data_points,int* cluster_points,int* centroids,int* pointer);
 
-void compute_centroid(int n,int k,int* data_points,int* cluster_points,int* centroids);
+void compute_centroid(int n,int k,int* data_points,int* cluster_points,int* centroids,int* pointer);
 
 void initialize(int n,int k,int* data_points,int* cluster_points,int* centroids);
+
+void settozero(int* pointer, int k);
 
 void kmeans_sequential(int N,
 					int K,
