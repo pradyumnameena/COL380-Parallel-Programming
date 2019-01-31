@@ -15,9 +15,7 @@ void dataset_in (const char* dataset_filename, int* N, int** data_points){
 }
 
 void clusters_out (const char* cluster_filename, int N, int* cluster_points){
-	printf("clusters_out reached");
 	FILE *fout = fopen(cluster_filename, "w");
-	printf("clusters_out reached");
 	for (int i = 0; i < N; i++){
 		fprintf(fout, "%d %d %d %d\n", 
 			*(cluster_points+(i*4)), *(cluster_points+(i*4)+1), 
@@ -29,7 +27,6 @@ void clusters_out (const char* cluster_filename, int N, int* cluster_points){
 
 void centroids_out (const char* centroid_filename, int K, int num_iterations, int* centroids){
 	FILE *fout = fopen(centroid_filename, "w");
-	printf("centroids_out reached");
 	for (int i = 0; i < num_iterations+1; i++){				//ith iteration
 		for (int j = 0; j < K; j++){			//jth centroid of ith iteration
 			fprintf(fout, "%d %d %d, ", 
