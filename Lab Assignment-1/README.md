@@ -12,3 +12,6 @@ Use this command to run the sequential code </br>
 Use the following command to run the openmp version of the code </br>
 `clang++ -Xpreprocessor -fopenmp main.cpp -o a.out -lomp`</br></br>
 Click [here](https://stackoverflow.com/questions/39979836/using-openmp-with-c11-on-mac-os) for more help.</br>
+
+
+Click [here](https://docs.google.com/document/d/1WxGl2QPuQrBRN0awb77xorafp1oeeL-lia-EWp_pA3k/edit) for the report.</br>
