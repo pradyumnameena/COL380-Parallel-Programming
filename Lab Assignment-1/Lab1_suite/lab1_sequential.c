@@ -103,13 +103,14 @@ void kmeans_sequential(int N,int K,int* data_points,int** cluster_points,int** c
 	int* cluster_pointer = *cluster_points;
 	int* centroid_pointer = *centroids;
 	int* pointer = (int*)malloc(sizeof(int)*K);
-	int count = 2;
-
+	int count = 0;
 	initialize(N,K,data_points,cluster_pointer,centroid_pointer);
-	while(count<10){
+
+	while(count<1){
 		settozero(pointer,K);
 		assign_centroid(N,K,data_points,cluster_pointer,centroid_pointer,pointer);
-		centroid_pointer = realloc(centroid_pointer,sizeof(int)*(K*3)*count);
+		centroid_pointer = realloc(centroid_pointer,sizeof(int)*(K*3)*(count+2));
+		centroid_pointer+=(K*(count+1)*3);
 		compute_centroid(N,K,data_points,cluster_pointer,centroid_pointer,pointer);
 		count++;
 	}
