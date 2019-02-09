@@ -11,6 +11,8 @@ Use this command to run the sequential code </br>
 #### Avoid number of threads if using sequential code
 
 ### Files Description
-`data.txt` contains the input points of the data. `data2.txt` will have the centroid indexes of all the input points. `data3.txt` will have all the computed centroids from each iteration of the algorithm.</br></br>
+`data.txt` contains the input points of the data</br>
+`data2.txt` will have the centroid indexes of all the input points</br>
+`data3.txt` will have all the computed centroids from each iteration of the algorithm</br>
 
 Click [here](https://docs.google.com/document/d/1WxGl2QPuQrBRN0awb77xorafp1oeeL-lia-EWp_pA3k/edit) for the report.</br>
