@@ -1,6 +1,5 @@
 # Lab Assignment 1
 
-## Sequential Program
 ### Commands
 
 Use this command to run the sequential code </br>
