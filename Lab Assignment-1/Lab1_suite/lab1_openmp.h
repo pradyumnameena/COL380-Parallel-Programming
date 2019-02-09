@@ -4,16 +4,12 @@
 #include <vector>
 using namespace std;
 
-vector<int> compute_centroid(vector<int> points,vector<int> centroids);
+void compute_centroid(int* data_points,int* centroids,int* cluster_ids,int n,int k);
 
-vector<int> centroid_update(int k,vector<int> points,vector<int> centroid_ids);
+void centroid_update(int* data_points,int* centroids,int* cluster_ids,int* count_points,int n,int k);
 
-vector<int> get_points(int n,int* data_points);
+void initialize(int* pointer,int n,int val);
 
-vector<int> get_centroid_idx(int k);
-
-vector<int> get_centroids(int k,int* data_points);
-
-void print_vector(vector<int> vec);
+void centroid_initialize(int* centroid,int* data_points,int num_cluster);
 
 #endif
