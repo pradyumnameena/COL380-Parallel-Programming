@@ -30,7 +30,7 @@ void *compute_centroid_thread(void *thread_id){
 	float dist_x,dist_y,dist_z;
 	
 	for(point_idx = start;point_idx<end && point_idx<num_points;point_idx++){
-		min_dist = 6000000;
+		min_dist = 60000000;
 		min_idx = 0;
 		for(cluster_idx = 0;cluster_idx<num_clusters;cluster_idx++){
 			dist_x = *(data_points_pointer+3*point_idx) - *(centroids_pointer+3*cluster_idx);
@@ -90,9 +90,12 @@ void *centroid_update_thread_V2(void *thread_id){
 		*(centroids_pointer + 3*tid + 1)+=*(helper_pointer + 3*num_clusters*counter + 3*tid + 1);
 		*(centroids_pointer + 3*tid + 2)+=*(helper_pointer + 3*num_clusters*counter + 3*tid + 2);
 	}
-	*(centroids_pointer + 3*tid)/=*(num_points_pointer+tid);
-	*(centroids_pointer + 3*tid + 1)/=*(num_points_pointer+tid);
-	*(centroids_pointer + 3*tid + 2)/=*(num_points_pointer+tid);
+	
+	if(*(num_points_pointer+tid)!=0){
+		*(centroids_pointer + 3*tid)/=*(num_points_pointer+tid);
+		*(centroids_pointer + 3*tid + 1)/=*(num_points_pointer+tid);
+		*(centroids_pointer + 3*tid + 2)/=*(num_points_pointer+tid);
+	}
 	pthread_exit(0);
 }
 
@@ -133,11 +136,11 @@ void centroid_update(){
 	
 	pthread_t thread_arr2[num_clusters];
 	rc = 0;
-	for(int i = 0;i<thread_count;i++){
+	for(int i = 0;i<num_clusters;i++){
 		rc = pthread_create(&thread_arr2[i], NULL, centroid_update_thread_V2, (void *)i);
 	}
 
-	for(int i = 0;i<thread_count;i++){
+	for(int i = 0;i<num_clusters;i++){
 		pthread_join(thread_arr2[i], NULL);
 	}	
 	return;
