@@ -2,7 +2,7 @@
 #include "lab1_pthread.h"
 #include "lab1_p.h"
 #include <stdio.h>
-#include <omp.h>
+// #include <omp.h>
 #include <pthread.h>
 using namespace std;
 
@@ -171,7 +171,7 @@ void centroid_initialize(float* centroid,int* data_points,int num_cluster){
 }
 
 void kmeans_pthread(int num_threads,int N,int K,int* data_points,int** cluster_points,float** centroid_pointer,int* num_iterations){
-	double start_time = omp_get_wtime();
+	// double start_time = omp_get_wtime();
 	
 	// declaration of various datatypes to be used
 	int* centroid_ids;
@@ -179,7 +179,7 @@ void kmeans_pthread(int num_threads,int N,int K,int* data_points,int** cluster_p
 	int* count_points;
 	int centroid_idx = 0;
 	int count = 0;
-	int max_iterations = 200;
+	int max_iterations = 300;
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 	
 	// malloc and initializing the centroids and cluster_ids array
@@ -249,8 +249,8 @@ void kmeans_pthread(int num_threads,int N,int K,int* data_points,int** cluster_p
 		*centroid_point = all_centroids.at(i);
 		centroid_point++;
 	}
-	double end_time = omp_get_wtime();
-	double computation_time = (end_time - start_time);
-	printf("Time Taken by pthread algorithm: %lf \n", computation_time);
+	// double end_time = omp_get_wtime();
+	// double computation_time = (end_time - start_time);
+	// printf("Time Taken by pthread algorithm: %lf \n", computation_time);
 	return;
 }

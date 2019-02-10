@@ -122,7 +122,7 @@ void kmeans_omp(int num_threads,int N,int K,int* data_points,int** cluster_point
 	int* count_points;
 	int centroid_idx = 0;
 	int count = 0;
-	int max_iterations = 200;
+	int max_iterations = 300;
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 
 	helper_pointer = (float*)malloc(sizeof(float)*3*K*(thread_count));

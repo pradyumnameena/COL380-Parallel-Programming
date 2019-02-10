@@ -2,7 +2,7 @@
 #include "lab1_sequential.h"
 #include "lab1_seq.h"
 #include <stdio.h>
-#include <omp.h>
+// #include <omp.h>
 using namespace std;
 
 void compute_centroid(int* data_points,float* centroids,int* cluster_ids,int n,int k){
@@ -97,14 +97,14 @@ void centroid_initialize(float* centroid,int* data_points,int num_cluster){
 }
 
 void kmeans_sequential(int N,int K,int* data_points,int** cluster_points,float** centroid_pointer,int* num_iterations){
-	double start_time = omp_get_wtime();
+	// double start_time = omp_get_wtime();
 	
 	int* centroid_ids;
 	float* centroid;
 	int* count_points;
 	int centroid_idx = 0;
 	int count = 0;
-	int max_iterations = 200;
+	int max_iterations = 300;
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 
 	centroid_ids = (int*)malloc(sizeof(int)*N);
@@ -163,8 +163,8 @@ void kmeans_sequential(int N,int K,int* data_points,int** cluster_points,float**
 		*centroid_point = all_centroids.at(i);
 		centroid_point++;
 	}
-	double end_time = omp_get_wtime();
-	double computation_time = (end_time - start_time);
-	printf("Time Taken by sequential algorithm: %lf \n", computation_time);
+	// double end_time = omp_get_wtime();
+	// double computation_time = (end_time - start_time);
+	// printf("Time Taken by sequential algorithm: %lf \n", computation_time);
 	return;
 }
