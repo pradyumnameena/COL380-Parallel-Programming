@@ -80,6 +80,22 @@ void *centroid_update_thread(void *thread_id){
 	pthread_exit(0);
 }
 
+void *centroid_update_thread_V2(void *thread_id){
+	long t;
+	t = (long)thread_id;
+	int tid = (int)t;
+	int counter = 0;
+	for(counter = 0;counter<thread_count;counter++){
+		*(centroids_pointer + 3*tid)+=*(helper_pointer + 3*num_clusters*counter + 3*tid);
+		*(centroids_pointer + 3*tid + 1)+=*(helper_pointer + 3*num_clusters*counter + 3*tid + 1);
+		*(centroids_pointer + 3*tid + 2)+=*(helper_pointer + 3*num_clusters*counter + 3*tid + 2);
+	}
+	*(centroids_pointer + 3*tid)/=*(num_points_pointer+tid);
+	*(centroids_pointer + 3*tid + 1)/=*(num_points_pointer+tid);
+	*(centroids_pointer + 3*tid + 2)/=*(num_points_pointer+tid);
+	pthread_exit(0);
+}
+
 void centroid_update(){
 	int i = 0;
 	while(i<3*num_clusters){
@@ -114,18 +130,16 @@ void centroid_update(){
 	for(int i = 0;i<thread_count;i++){
 		pthread_join(thread_arr[i], NULL);
 	}
-
-	// collection of data using helper_pointer sequentially
-	// update the centroid waale points ke pointer ki values
 	
-	for(int cluster_idx = 0;cluster_idx<num_clusters;cluster_idx++){
-		if(*(num_points_pointer+cluster_idx)!=0){
-			*(centroids_pointer + 3*cluster_idx)/=*(num_points_pointer+cluster_idx);
-			*(centroids_pointer + 3*cluster_idx + 1)/=*(num_points_pointer+cluster_idx);
-			*(centroids_pointer + 3*cluster_idx + 2)/=*(num_points_pointer+cluster_idx);
-		}
+	pthread_t thread_arr2[num_clusters];
+	rc = 0;
+	for(int i = 0;i<thread_count;i++){
+		rc = pthread_create(&thread_arr2[i], NULL, centroid_update_thread_V2, (void *)i);
 	}
-	
+
+	for(int i = 0;i<thread_count;i++){
+		pthread_join(thread_arr2[i], NULL);
+	}	
 	return;
 }
 
