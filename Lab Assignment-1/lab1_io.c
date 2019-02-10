@@ -1,5 +1,5 @@
 #include "lab1_io.h"
-#include <stdlib.h>
+// #include <stdlib.h> use krle agar nhi chale toh. Submission ke time hatana hai
 void dataset_in (const char* dataset_filename, int* N, int** data_points){
 	FILE *fin = fopen(dataset_filename, "r");
 
@@ -16,6 +16,7 @@ void dataset_in (const char* dataset_filename, int* N, int** data_points){
 
 void clusters_out (const char* cluster_filename, int N, int* cluster_points){
 	FILE *fout = fopen(cluster_filename, "w");
+
 	for (int i = 0; i < N; i++){
 		fprintf(fout, "%d %d %d %d\n", 
 			*(cluster_points+(i*4)), *(cluster_points+(i*4)+1), 
@@ -25,11 +26,12 @@ void clusters_out (const char* cluster_filename, int N, int* cluster_points){
 	fclose(fout);
 }
 
-void centroids_out (const char* centroid_filename, int K, int num_iterations, int* centroids){
+void centroids_out (const char* centroid_filename, int K, int num_iterations, float* centroids){
 	FILE *fout = fopen(centroid_filename, "w");
+
 	for (int i = 0; i < num_iterations+1; i++){				//ith iteration
 		for (int j = 0; j < K; j++){			//jth centroid of ith iteration
-			fprintf(fout, "%d %d %d, ", 
+			fprintf(fout, "%f %f %f, ", 
 									*(centroids+(i*K+j)*3), 	 //x coordinate
 									*(centroids+(i*K+j)*3+1),  //y coordinate
 									*(centroids+(i*K+j)*3+2)); //z coordinate

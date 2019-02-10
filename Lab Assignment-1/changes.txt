@@ -1,0 +1,2 @@
+• lab1_io.c mein line 2
+• lab1_io.h,lab1_omp.h,lab1_pthread.h,lab1_sequential.h mein stdlib.h waali line

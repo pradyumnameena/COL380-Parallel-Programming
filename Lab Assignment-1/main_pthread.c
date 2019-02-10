@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
 	int num_threads;		//no. of threads to be used (input)
 	int* data_points;		//data points (input)
 	int* cluster_points;	//clustered data points (to be computed)
-	int* centroids;			//centroids of each iteration (to be computed)
+	float* centroids;			//centroids of each iteration (to be computed)
 	int num_iterations;    //no of iterations performed by algo (to be computed)
 	//---------------------------------------------------------------------
 
@@ -64,8 +64,8 @@ int main(int argc, char const *argv[])
 	// 	-- Pre-defined function --
 	// 	reads cluster_points and centroids and save it it appropriate files
 	// */
-	// clusters_out (argv[4], N, cluster_points);
-	// centroids_out (argv[5], K, num_iterations, centroids);
+	clusters_out (argv[4], N, cluster_points);
+	centroids_out (argv[5], K, num_iterations, centroids);
 
 	computation_time = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
 	printf("Time Taken: %lf \n", computation_time);

@@ -1,9 +1,8 @@
 #ifndef LAB1_SEQUENTIAL_H
 #define LAB1_SEQUENTIAL_H
 
-#include <stdlib.h>
 // #include <malloc.h>
-// uncomment line 5 before submission and remove line 4
+#include <stdlib.h>
 
 /*
 	Arguments:
@@ -39,7 +38,7 @@ void kmeans_sequential(int N,
 					int K,
 					int* data_points,
 					int** data_point_cluster,
-					int** centroids,
+					float** centroids,
 					int* num_iterations
 					);
 

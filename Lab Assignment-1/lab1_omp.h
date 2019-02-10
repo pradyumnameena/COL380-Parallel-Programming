@@ -1,6 +1,7 @@
 #ifndef LAB1_OMP_H
 #define LAB1_OMP_H
 
+// #include <malloc.h>
 #include <stdlib.h>
 
 /*
@@ -39,7 +40,7 @@ void kmeans_omp(int num_threads,
 				int K,
 				int* data_points,
 				int** data_point_cluster,
-				int** centroids,
+				float** centroids,
 				int* num_iterations
 				);
 

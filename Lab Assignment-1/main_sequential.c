@@ -29,7 +29,7 @@ int main(int argc, char const *argv[])
 	int K;					//no. of clusters to be formed (input)
 	int* data_points;		//data points (input)
 	int* cluster_points;	//clustered data points (to be computed)
-	int* centroids;			//centroids of each iteration (to be computed)
+	float* centroids;			//centroids of each iteration (to be computed)
 	int num_iterations;    //no of iterations performed by algo (to be computed)
 	//---------------------------------------------------------------------
 
