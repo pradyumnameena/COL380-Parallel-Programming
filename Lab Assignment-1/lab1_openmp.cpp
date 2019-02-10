@@ -5,6 +5,8 @@
 #include <stdio.h>
 using namespace std;
 int thread_count = 0;
+float* helper_pointer;
+// is pointer ki jagah try reduction. Takle ne kiya hai. It might work
 
 void compute_centroid(int* data_points,float* centroids,int* cluster_ids,int n,int k){
 	int area = n/thread_count;
@@ -123,6 +125,7 @@ void kmeans_omp(int num_threads,int N,int K,int* data_points,int** cluster_point
 	int max_iterations = 200;
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 
+	helper_pointer = (float*)malloc(sizeof(float)*3*K*(thread_count));
 	centroid_ids = (int*)malloc(sizeof(int)*N);
 	centroid = (float*)malloc(sizeof(float)*3*K);
 	count_points = (int*)malloc(sizeof(int)*K);
