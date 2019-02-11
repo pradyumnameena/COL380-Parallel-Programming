@@ -19,4 +19,4 @@ Use this command to run the sequential code </br>
 `visualise.py` is for visuals of classification.</br>
 Use `python visualise.py data2.txt` for this file</br>
 
-Click [here](https://docs.google.com/document/d/1WxGl2QPuQrBRN0awb77xorafp1oeeL-lia-EWp_pA3k/edit) for the report.</br>
+Click [here](https://docs.google.com/document/d/1WxGl2QPuQrBRN0awb77xorafp1oeeL-lia-EWp_pA3k/edit) for the report and [here](https://docs.google.com/spreadsheets/d/16M67J38LiDNExXrUZYvtDNi2UIRbjOKZ0cRBwAfiQQQ/edit#gid=0) for statistics.</br>
