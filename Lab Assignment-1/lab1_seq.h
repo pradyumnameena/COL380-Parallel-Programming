@@ -10,6 +10,9 @@ void centroid_update(int* data_points,float* centroids,int* cluster_ids,int* cou
 
 void initialize(int* pointer,int n,int val);
 
-void centroid_initialize(float* centroid,int* data_points,int num_cluster,int num_points);
+void centroid_initialize(float* centroid,int* data_points,int num_cluster);
 
 #endif
+
+// many ops affectes time like taking sqrt took 24 or 14 seconds difference.
+// instead of making fuction for distance compute at the same place reduced 7 seconds

@@ -83,7 +83,7 @@ void initialize(int* pointer,int n,int val){
 	return;
 }
 
-void centroid_initialize(float* centroid,int* data_points,int num_cluster,int num_points){
+void centroid_initialize(float* centroid,int* data_points,int num_cluster){
 	int i = 0;
 	while(i<3*num_cluster){
 		*centroid = *data_points;
@@ -104,14 +104,14 @@ void kmeans_sequential(int N,int K,int* data_points,int** cluster_points,float**
 	int* count_points;
 	int centroid_idx = 0;
 	int count = 0;
-	int max_iterations = 350;
+	int max_iterations = 300;
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 
 	centroid_ids = (int*)malloc(sizeof(int)*N);
 	centroid = (float*)malloc(sizeof(float)*3*K);
 	count_points = (int*)malloc(sizeof(int)*K);
 	initialize(centroid_ids,N,0);
-	centroid_initialize(centroid,data_points,K,N);
+	centroid_initialize(centroid,data_points,K);
 
 	// adding the initial centroid's coordinates
 	while(centroid_idx<3*K){
@@ -122,16 +122,12 @@ void kmeans_sequential(int N,int K,int* data_points,int** cluster_points,float**
 	centroid-=3*K;
 	
 	// main algorithm
-	float change = 10000;
-	float epsilon = 400;
-	
-	while(count<max_iterations && change>epsilon){
-		change = 0;
+	while(count<max_iterations){
 		compute_centroid(data_points,centroid,centroid_ids,N,K);
 		centroid_update(data_points,centroid,centroid_ids,count_points,N,K);
+		
 		for(int i = 0;i<3*K;i++){
 			all_centroids.at(centroid_idx) = *centroid;
-			change+=(*centroid - all_centroids.at(centroid_idx - 3*K));
 			centroid++;
 			centroid_idx++;
 		}

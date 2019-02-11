@@ -179,7 +179,7 @@ void kmeans_pthread(int num_threads,int N,int K,int* data_points,int** cluster_p
 	int* count_points;
 	int centroid_idx = 0;
 	int count = 0;
-	int max_iterations = 350;
+	int max_iterations = 300;
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 	
 	// malloc and initializing the centroids and cluster_ids array
@@ -209,16 +209,11 @@ void kmeans_pthread(int num_threads,int N,int K,int* data_points,int** cluster_p
 	centroid-=3*K;
 	
 	// main algorithm
-	float change = 10000;
-	float epsilon = 350;
-	
-	while(count<max_iterations && change>epsilon){
-		change = 0;
+	while(count<max_iterations){
 		compute_centroid();
 		centroid_update();
 		for(int i = 0;i<3*K;i++){
 			all_centroids.at(centroid_idx) = *centroid;
-			change+=(*centroid - all_centroids.at(centroid_idx - 3*K));
 			centroid++;
 			centroid_idx++;
 		}
