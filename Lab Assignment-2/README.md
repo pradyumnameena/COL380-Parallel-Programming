@@ -9,7 +9,7 @@ Use this command to run the code </br>
 
 Example </br>
 
-`./pca testcase/testcase_1000_1000 90`
+`./pca testcase_1000_1000 90`
 
 ### Helper Files
 `gen_testcase.py` for generating testcases</br>
