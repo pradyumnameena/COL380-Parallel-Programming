@@ -2,8 +2,8 @@
 #define LAB2_IO_H
 
 #include <stdio.h>
-#include <malloc.h>
-
+// #include <malloc.h>
+#include <stdlib.h>
 /*
 	M : number of rows (samples) in input matrix D
     N : number of columns (features) in input matrix D

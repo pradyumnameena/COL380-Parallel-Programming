@@ -66,6 +66,7 @@ int main(int argc, char const *argv[])
 
 	end_time = omp_get_wtime();
 	computation_time = ((double) (end_time - start_time));
+	printf("%lf\n",computation_time);
 	
 	/*
 		--Pre-defined functions --
