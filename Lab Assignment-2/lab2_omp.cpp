@@ -49,15 +49,21 @@ void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** 
     float* reduced_variance = (float*)malloc(sizeof(float)*N);
     int* eigen_value_sorted_index = (int*)malloc(sizeof(int)*N);
 
+    // sum of eigen values
     for(idx = 0;idx<N;idx++){
     	sum+=(*(SIGMA+idx));
     }
     
-    for(idx = 0;idx<N;idx++){
-    	*(reduced_variance+idx) = (*(SIGMA+idx))/sum;
-    	*(eigen_value_sorted_index+i) = idx;
+    // reduction variances
+    #pragma omp parallel for
+    {
+    	for(idx = 0;idx<N;idx++){
+	    	*(reduced_variance+idx) = (*(SIGMA+idx))/sum;
+	    	*(eigen_value_sorted_index+idx) = idx;
+	    }
     }
 
+    // sorting the eigen values while keeping track of the corresponding column
     for(i = 0;i<N-1;i++){
     	for(j = i+1;j<N;j++){
     		if((*(reduced_variance+j)) > (*(reduced_variance+i))){
@@ -69,8 +75,8 @@ void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** 
     		}
     	}
     }
-    // eigen_value_sorted_index stores ki is index par kaunse index ka eigenvector ki cooresponding value hai
 
+    // eigen_value_sorted_index stores ki is index par kaunse index ka eigenvector ki cooresponding value hai
     idx = 0;
     float summed_variance = 0;
     float retention_reqd = retention*0.01;
@@ -81,13 +87,20 @@ void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** 
     		break;
     	}
     }
+    // check ki agar 100 daalen as retention toh gadbad kyon aa rha hai
 
     // idx+1 is the number of features to be used
     int col = 0;
     int to_be_used = 0;
     float* reduced_eigen_vector_matrix = (float*)malloc(sizeof(float)*(idx+1)*M);
-
-    // write function to retrieve the corresponding eigen vectors
-
+    
+    // function to retrieve the corresponding eigen vectors
+    for(index = 0;index<=idx;index++){
+    	to_be_used = *(eigen_value_sorted_index+index);
+    	for(col=0;col<M;col++){
+    		*(reduced_eigen_vector_matrix+col*(1+idx)+index) = *(U+col*N+to_be_used);
+    	}
+    }
+    
     *(D_HAT) = matrix_mult(M,N,M,1+idx,D,reduced_eigen_vector_matrix);
 }
