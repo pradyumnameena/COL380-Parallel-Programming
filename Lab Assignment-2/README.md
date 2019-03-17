@@ -3,7 +3,7 @@
 ### Commands
 
 Use this command to run the code </br>
-`clang++ -Xpreprocessor -fopenmp main_omp.c lab2_io.c lab2_omp.c -lomp -o pca`</br>
+`clang++ -Xpreprocessor -fopenmp main_omp.c lab2_io.c lab2_omp.cpp -lomp -o pca`</br>
 
 `./pca <input filename> <retention>`</br>
 
