@@ -6,8 +6,11 @@
 using namespace std;
 
 void matrix_mult(int m1,int n1,int m2,int n2,float* mat1,float* mat2,float* res_matrix){
-	for(int i = 0;i<m1*n2;i++){
-		*(res_matrix+i) = 0;
+	#pragma omp parallel for
+	{
+		for(int i = 0;i<m1*n2;i++){
+			*(res_matrix+i) = 0;
+		}
 	}
 
 	for(int i = 0;i<m1;i++){
@@ -60,41 +63,103 @@ void identity_matrix(float* mat,int M){
 	return;
 }
 
-void givens_rotation(int m,float* matrix,float* Q,float* R){
+void get_column_vector(float* matrix,float* col_vector,int length,int m){
+	int idx = 0;
+	for(idx = 0;idx<length;idx++){
+		*(col_vector+idx) = *(matrix+(m-length+idx)*m + m-length);
+	}
+	return;
+}
+
+float get_norm(float* mat,int length){
+	float rv = 0.0;
+	int idx = 0;
+	for(idx = 0;idx<length;idx++){
+		rv+=((*(mat+idx))*(*(mat+idx)));
+	}
+	return sqrt(rv);
+}
+
+void matrix_scalar_mult(float* mat,float val,int num_elements){
+	int idx = 0;
+	#pragma omp parallel for
+	{
+		for(idx = 0;idx<num_elements;idx++){
+			(*(mat+idx))*=val;
+		}
+	}
+	return;
+}
+
+void subtract(float* mat1,float* mat2,int num_elements,int m){
 	int i = 0;
 	int j = 0;
-	float c = 0;
-	float s = 0;
-	float* identity = (float*)malloc(sizeof(float)*m*m);
+	int length = int(sqrt(num_elements));
+	int offset = length-m;
+
+	for(i = m-length;i<m;i++){
+		for(j = m-length;j<m;j++){
+			*(mat1+i*m+j) -= (*(mat2+(offset+i)*length + (offset+j)));
+		}
+	}
+	return;
+}
+
+void householders(int m,float* matrix,float* Q,float* R){
+	int col = 0;
+	float norm = 0;
+	float* transpose;
+	float* col_vector;
+	float* matrix_prod;
+	float* identity_mat = (float*)malloc(sizeof(float)*m*m);
+	float* matrix_new = (float*)malloc(sizeof(float)*m*m);
+	float* matrix_new_copy = (float*)malloc(sizeof(float)*m*m);
+
 	float* Q_new = (float*)malloc(sizeof(float)*m*m);
 	float* R_new = (float*)malloc(sizeof(float)*m*m);
-	float* identity_transpose = (float*)malloc(sizeof(float)*m*m);
-	identity_matrix(Q,m);
-	identity_matrix(identity,m);
 	copy_matrix_values(matrix,R,m*m);
+	copy_matrix_values(matrix,matrix_new,m*m);
+	copy_matrix_values(matrix,matrix_new_copy,m*m);
 
-	for(i = 0;i<m-1;i++){
-		for(j = m-1;j>i;j--){
-			s = *(R+j*m+i);
-			c = *(R+(j-1)*m+i);
-			s = s/(sqrt(c*c + s*s));
-			c = c/(sqrt(c*c + s*s));
-			*(identity+j*m+i) = c;
-			*(identity+j*m+i+1) = s;
-			*(identity+(j+1)*m+i) = -1*s;
-			*(identity+(j+1)*m+i+1) = c;
-			matrix_mult(m,m,m,m,identity,R,R_new);
-			copy_matrix_values(R_new,R,m*m);
-			matrix_transpose(m,m,identity,identity_transpose);
-			matrix_mult(m,m,m,m,Q,identity_transpose,Q_new);
-			copy_matrix_values(Q_new,Q,m*m);
+	for(col = 0;col<m;col++){
+		col_vector = (float*)malloc(sizeof(float)*(m-col));
+		get_column_vector(matrix_new,col_vector,m-col,m);
+		
+		norm = get_norm(col_vector,m-col);
+		if((*(col_vector))>0){
+			*(col_vector) = (*(col_vector)) + norm;
+		}else{
+			*(col_vector) = (*(col_vector)) - norm;
 		}
+
+		norm = get_norm(col_vector,m-col);
+		matrix_scalar_mult(col_vector,(1.0)/norm,(m-col));
+		transpose = (float*)malloc(sizeof(float)*(m-col));
+		matrix_prod = (float*)malloc(sizeof(float)*(m-col)*(m-col));
+		matrix_transpose(m-col,1,col_vector,transpose);
+		matrix_mult(m-col,1,1,m-col,col_vector,transpose,matrix_prod);
+
+		identity_matrix(identity_mat,m);
+		matrix_scalar_mult(matrix_prod,2.0,(m-col)*(m-col));
+		subtract(identity_mat,matrix_prod,(m-col)*(m-col),m);
+		
+		free(transpose);
+		free(col_vector);
+		free(matrix_prod);
+
+		matrix_mult(m,m,m,m,identity_mat,matrix_new,matrix_new_copy);
+		copy_matrix_values(matrix_new_copy,matrix_new,m*m);
+		matrix_mult(m,m,m,m,Q,identity_mat,Q_new);
+		copy_matrix_values(Q_new,Q,m*m);
+		matrix_mult(m,m,m,m,identity_mat,R,R_new);
+		copy_matrix_values(R_new,R,m*m);
 	}
 
 	free(Q_new);
 	free(R_new);
-	free(identity);
-	free(identity_transpose);
+	free(identity_mat);
+	free(matrix_new_copy);
+	free(matrix_new);
 	return;
 }
 
@@ -108,6 +173,8 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
 	
 	float* QR_decomposition_Q = (float*)malloc(sizeof(float)*M*M);
 	float* QR_decomposition_R = (float*)malloc(sizeof(float)*M*M);
+	identity_matrix(QR_decomposition_Q,M);
+	identity_matrix(QR_decomposition_R,M);
 	float* D_original = (float*)malloc(sizeof(float)*M*M);
 	float* E_original = (float*)malloc(sizeof(float)*M*M);
 	float* E_new = (float*)malloc(sizeof(float)*M*M);
@@ -123,7 +190,7 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
 	identity_matrix(E_new,M);
 
 	while(condition){
-		givens_rotation(M,D_original,QR_decomposition_Q,QR_decomposition_R);
+		householders(M,D_original,QR_decomposition_Q,QR_decomposition_R);
 		matrix_mult(M,M,M,M,QR_decomposition_R,QR_decomposition_Q,D_original);
 		matrix_mult(M,M,M,M,E_original,QR_decomposition_Q,E_new);
 		copy_matrix_values(E_new,E_original,M*M);
@@ -134,7 +201,8 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
 }
 
 void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** D_HAT, int *K)
-{
+{	
+	printf("PCA AREA\n");
     // sigma has square root of eigen values hence all will be positive
     int i = 0;
     int j = 0;
@@ -201,6 +269,7 @@ void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** 
     		*(reduced_eigen_vector_matrix+col*(1+idx)+index) = *(U+col*N+to_be_used);
     	}
     }
- 
+ 	printf("End\n");
     matrix_mult(M,N,M,1+idx,D,reduced_eigen_vector_matrix,*(D_HAT));
+    printf("AEnd\n");
 }
