@@ -5,41 +5,11 @@
 #include "lab2_omp.h"
 using namespace std;
 
-void matrix_mult(int m1,int n1,int m2,int n2,float* mat1,float* mat2,float* res_matrix){
-	#pragma omp parallel for
-	{
-		for(int i = 0;i<m1*n2;i++){
-			*(res_matrix+i) = 0;
-		}
-	}
-
-	for(int i = 0;i<m1;i++){
-		for(int j = 0;j<n2;j++){
-			for(int k = 0;k<n1;k++){
-				*(res_matrix+i*n2+j)+= (*(mat1+i*n1+k)) * (*(mat2+k*n2+j));
-			}
-		}
-	}
-	return;
-}
-
-void matrix_transpose(int m,int n,float* mat,float* res_matrix){
-	for(int i = 0;i<m;i++){
-		for(int j = 0;j<n;j++){
-			*(res_matrix+j*m+i) = *(mat+i*n+j);
-		}
-	}
-	return;
-}
-
-void matrix_mult_with_transpose(int m1,int n1,int m2,int n2,float* mat1,float* mat2,float* result_matrix){
-
-}
-
 void copy_matrix_values(float* mat1,float* mat2,int num_vals){
+	int i = 0;
 	#pragma omp parallel for
 	{
-		for(int i = 0;i<num_vals;i++){
+		for(i = 0;i<num_vals;i++){
 			*(mat2+i) = *(mat1+i);
 		}
 	}
@@ -53,7 +23,7 @@ void identity_matrix(float* mat,int M){
 		#pragma omp for
 		{
 			for(i = 0;i<M*M;i++){
-				*(mat+i) = 0;
+				*(mat+i) = 0.0;
 			}
 		}
 
@@ -67,23 +37,6 @@ void identity_matrix(float* mat,int M){
 	return;
 }
 
-void get_column_vector(float* matrix,float* col_vector,int length,int m){
-	int idx = 0;
-	for(idx = 0;idx<length;idx++){
-		*(col_vector+idx) = *(matrix+(m-length+idx)*m + m-length);
-	}
-	return;
-}
-
-float get_norm(float* mat,int length){
-	float rv = 0.0;
-	int idx = 0;
-	for(idx = 0;idx<length;idx++){
-		rv+=((*(mat+idx))*(*(mat+idx)));
-	}
-	return sqrt(rv);
-}
-
 void matrix_scalar_mult(float* mat,float val,int num_elements){
 	int idx = 0;
 	#pragma omp parallel for
@@ -95,15 +48,114 @@ void matrix_scalar_mult(float* mat,float val,int num_elements){
 	return;
 }
 
+float compute_error(float* mat1,float* mat2,int num){
+	float rv = 0;
+	int idx = 0;
+	#pragma omp parallel for reduction(+:rv)
+	{
+		for(idx = 0;idx<num;idx++){
+			rv+= pow((*(mat2+idx)) - (*(mat1+idx)),2);
+		}
+	}
+	return sqrt(rv);
+}
+
+void matrix_print(int rows,int cols,float* pointer){
+	int i = 0;
+	int j = 0;
+	for(i = 0;i<rows;i++){
+		for(j = 0;j<cols;j++){
+			printf("%f, ",*(pointer+i*cols+j));
+		}
+		printf("\n");
+	}
+}
+
 void subtract(float* mat1,float* mat2,int num_elements,int m){
 	int i = 0;
 	int j = 0;
 	int length = int(sqrt(num_elements));
 	int offset = length-m;
 
-	for(i = m-length;i<m;i++){
-		for(j = m-length;j<m;j++){
-			*(mat1+i*m+j) -= (*(mat2+(offset+i)*length + (offset+j)));
+	#pragma omp parallel for private(j)
+	{
+		for(i = m-length;i<m;i++){
+			for(j = m-length;j<m;j++){
+				*(mat1+i*m+j) -= (*(mat2+(offset+i)*length + (offset+j)));
+			}
+		}
+	}
+	return;
+}
+
+void get_columns(float* mat,float* mat2,int num_rows,int num_cols){
+	int i = 0;
+	int j = 0;
+
+	#pragma omp parallel for private(j)
+	{
+		for(i = 0;i<num_rows;i++){
+			for(j = 0;j<num_cols;j++){
+				*(mat2+num_cols*i+j) = *(mat+num_rows*i+j);
+			}
+		}
+	}
+	return;
+}
+
+void matrix_transpose(int m,int n,float* mat,float* res_matrix){
+	int i = 0;
+	int j = 0;
+
+	#pragma omp parallel for private(j)
+	{
+		for(i = 0;i<m;i++){
+			for(j = 0;j<n;j++){
+				*(res_matrix+j*m+i) = *(mat+i*n+j);
+			}
+		}
+	}
+	return;
+}
+
+void get_column_vector(float* matrix,float* col_vector,int length,int m){
+	int idx = 0;
+	int offset = m-length;
+	#pragma omp parallel for
+	{
+		for(idx = 0;idx<length;idx++){
+			*(col_vector+idx) = *(matrix+(offset+idx)*m + offset);
+		}
+	}
+	return;
+}
+
+float get_norm(float* mat,int length){
+	float rv = 0.0;
+	int idx = 0;
+	#pragma omp parallel for reduction(+:rv)
+	{
+		for(idx = 0;idx<length;idx++){
+			rv+=((*(mat+idx))*(*(mat+idx)));
+		}
+	}
+	return sqrt(rv);
+}
+
+void matrix_mult(int m1,int n1,int m2,int n2,float* mat1,float* mat2,float* res_matrix){
+	int i,j,k;
+	#pragma omp parallel shared(mat1,mat2,res_matrix) private(i,j,k)
+	{
+		#pragma omp for schedule(static)
+		{
+			for (i = 0;i<m1;i++){
+      			for (j = 0;j<n2;j++){
+         			*(res_matrix+i*n2+j) = 0;
+         			for (k = 0;k<m2;k++){
+         				*(res_matrix+i*n2+j) += ((*(mat1+i*n1+k)) * (*(mat2+k*n2+j)));
+         			}
+      			}
+   			}
 		}
 	}
 	return;
@@ -167,38 +219,26 @@ void householders(int m,float* matrix,float* Q,float* R){
 	return;
 }
 
-float compute_error(float* mat1,float* mat2,int num){
-	float rv = 0;
-	int idx = 0;
-	for(idx = 0;idx<num;idx++){
-		*(mat2+idx) -= (*(mat1+idx));
-		*(mat2+idx) *= (*(mat2+idx));
-		rv += (*(mat2+idx));
+void check(int M,int N,float* D_T,float* U,float* sigma,float* V_T){
+	float* U_sig = (float*)malloc(sizeof(float)*N*M);
+	float* sig = (float*)malloc(sizeof(float)*N*M);
+	
+	for(int i = 0;i<N*M;i++){
+		*(sig+i) = 0;
 	}
-	return sqrt(rv);
-}
-
-void get_columns(float* mat,float* mat2,int length,int num_cols){
-	int i = 0;
-	int j = 0;
-
-	for(i = 0;i<length;i++){
-		for(j = 0;j<num_cols;j++){
-			*(mat2+length*i+j) = *(mat+i*length+j);
-		}
+	
+	for(int i = 0;i<N;i++){
+		*(sig+i*M+i) = *(sigma+i);
 	}
-	return;
-}
 
-void matrix_print(int rows,int cols,float* pointer){
-	int i = 0;
-	int j = 0;
-	for(i = 0;i<rows;i++){
-		for(j = 0;j<cols;j++){
-			printf("%f, ",*(pointer+i*cols+j));
-		}
-		printf("\n");
-	}
+	matrix_mult(N,N,N,M,U,sig,U_sig);
+	float* D_res = (float*)malloc(sizeof(float)*N*M);
+	matrix_mult(N,M,M,M,U_sig,V_T,D_res);
+	float error = compute_error(D_T,D_res,M*N);
+	free(U_sig);
+	free(sig);
+	free(D_res);
+	// printf("%f\n",error);
 }
 
 void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
@@ -218,7 +258,7 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
 	int num_iters = 0;
 	float epsilon = 0.001;
 	float error = 10;
-	int max_iterations = 30000;
+	int max_iterations = M+N;
 
 	copy_matrix_values(matrix_prod,D_original,N*N);
 	free(matrix_prod);
@@ -236,15 +276,7 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
 		error = compute_error(D_original,D_old,N*N);
 		num_iters++;
 	}
-	printf("Number of iterations = %d\n",num_iters);
-	printf("Error = %f\n",error);
-
-	printf("Eigen vector matrix\n");
-	matrix_print(N,N,E_new);
-	printf("Eigen values matrix\n");
-	matrix_print(N,N,D_original);
-	printf("*************\n");
-
+	
 	free(QR_decomposition_Q);
 	free(QR_decomposition_R);
 	free(E_original);
@@ -263,34 +295,34 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
 	int i = 0;
 	int j = 0;
     float temp = 0;
-    for(i = 0;i<N-1;i++){
+    int temp2 = 0;
+
+    for(i = 0;i<N;i++){
     	for(j = i+1;j<N;j++){
     		if((*(eigen_values+j)) > (*(eigen_values+i))){
-    			temp = *(eigen_values+j);
-    			*(eigen_values+j) = *(eigen_values+i);
-    			*(eigen_values+i) = temp;
-    			*(eigen_value_sorted_index+i) = j;
-    			*(eigen_value_sorted_index+j) = i;
+    			temp = *(eigen_values+i);
+    			*(eigen_values+i) = *(eigen_values+j);
+    			*(eigen_values+j) = temp;
+    			temp2 = *(eigen_value_sorted_index+j);
+    			*(eigen_value_sorted_index+j) = *(eigen_value_sorted_index+i);
+    			*(eigen_value_sorted_index+i) = temp2;
     		}
     	}
     }
     
-    idx = 0;
+ 	idx = 0;
     int diag_idx = 0;
     float* eigen_values_pointer = *(SIGMA);
     float* Sigma_inverse = (float*)malloc(sizeof(float)*M*N);
-
     for(idx = 0;idx<N;idx++){
 		*(eigen_values_pointer+idx) = *(eigen_values+idx);
 	}
 
 	free(eigen_values);
-
     idx = 0;
 	for(idx = 0;idx<N*M;idx++){
 		*(Sigma_inverse+idx) = 0;
 	}
-	
 	for(diag_idx = 0;diag_idx<N;diag_idx++){
 		*(Sigma_inverse+diag_idx*N+diag_idx) = 1/(*(eigen_values_pointer+diag_idx));
 	}
@@ -305,36 +337,44 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
     		*(eigen_vector_pointer+row*N+idx) = *(E_new+row*N+index);
     	}
     }
-
-	free(eigen_value_sorted_index);
+    
+    free(eigen_value_sorted_index);
 	float* U_transpose = (float*)malloc(sizeof(float)*N*N);
+	float* result = (float*)malloc(sizeof(float)*M*N);
     matrix_transpose(N,N,eigen_vector_pointer,U_transpose);
-    matrix_mult(M,N,N,N,Sigma_inverse,U_transpose,Sigma_inverse);
+    matrix_mult(M,N,N,N,Sigma_inverse,U_transpose,result);
     free(U_transpose);
-    matrix_mult(M,N,N,M,Sigma_inverse,D_transpose,*(V_T));
+    matrix_mult(M,N,N,M,result,D_transpose,*(V_T));
+    
+    // check(M,N,D_transpose,eigen_vector_pointer,*(SIGMA),*(V_T));
     free(D_transpose);
+    free(result);
     free(Sigma_inverse);
 	return;
 }
 
-void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** D_HAT, int *K)
+void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** D_HAT, int* K)
 {	
 	int idx = 0;
     float sum = 0;
     float retention_reqd = retention*0.01;
     float* reduced_variance = (float*)malloc(sizeof(float)*N);
 
-    // sum of eigen values
-    for(idx = 0;idx<N;idx++){
-    	sum+=(*(SIGMA+idx));
-    }
-
-    // reduction variances
-    #pragma omp parallel for
+    #pragma omp parallel
     {
-    	for(idx = 0;idx<N;idx++){
-	    	*(reduced_variance+idx) = (*(SIGMA+idx))/sum;
-	    }
+    	#pragma omp for reduction(+:sum)
+    	{
+    		for(idx = 0;idx<N;idx++){
+		    	sum+=(*(SIGMA+idx));
+		    }
+    	}
+
+    	#pragma omp for
+    	{
+    		for(idx = 0;idx<N;idx++){
+		    	*(reduced_variance+idx) = (*(SIGMA+idx))/sum;
+		    }
+    	}
     }
 
     sum = 0.0;
@@ -354,11 +394,8 @@ void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** 
     float* W = (float*)malloc(sizeof(float)*(1+idx)*N);
     get_columns(U,W,N,1+idx);
     float* D_HAT_pointer = (float*)malloc(sizeof(float)*(1+idx)*M);
-    *D_HAT = D_HAT_pointer;
+    *(D_HAT) = D_HAT_pointer;
     matrix_mult(M,N,N,1+idx,D,W,D_HAT_pointer);
     free(W);
     return;
 }
-
-
-
