@@ -14,6 +14,4 @@ Example </br>
 ### Helper Files
 `gen_testcase.py` for generating testcases</br>
 
-Use `python gen_testcase.py` for this file and then insert the dimensions of the matrix (M,N)</br>
-
-Click [here](https://docs.google.com/document/d/1fwzwkMpfww25CdeVmkaCUORacjH0btD-4ZK7MENcGWg/edit) for the report.</br>
+Use `python gen_testcase.py` for this file and then provide the dimensions of the matrix (M,N)</br>

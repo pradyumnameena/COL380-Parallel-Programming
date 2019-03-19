@@ -18,8 +18,9 @@
 
 
 from random import uniform
-
+print("Enter the number of rows")
 M = input()           # number of rows (samples) in input matrix D
+print("Enter the number of columns")
 N = input()             # number of columns (features) in input matrix
 lrange = -100000    # lrange <= element of matrix
 urange = 100000     # element of matrix <= urange
