@@ -183,7 +183,7 @@ void kmeans_pthread(int num_threads,int N,int K,int* data_points,int** cluster_p
 	vector<float> all_centroids((max_iterations+1)*K*3,0);
 	
 	// malloc and initializing the centroids and cluster_ids array
-	helper_pointer = (float*)malloc(sizeof(float)*3*K*(thread_count));
+	helper_pointer = (float*)malloc(sizeof(float)*3*K*(num_threads));
 	centroid_ids = (int*)malloc(sizeof(int)*N);
 	centroid = (float*)malloc(sizeof(float)*3*K);
 	count_points = (int*)malloc(sizeof(int)*K);
