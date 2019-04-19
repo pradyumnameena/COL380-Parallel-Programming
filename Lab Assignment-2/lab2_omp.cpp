@@ -346,7 +346,7 @@ void SVD(int M, int N, float* D, float** U, float** SIGMA, float** V_T)
     free(U_transpose);
     matrix_mult(M,N,N,M,result,D_transpose,*(V_T));
     
-    // check(M,N,D_transpose,eigen_vector_pointer,*(SIGMA),*(V_T));
+    check(M,N,D_transpose,eigen_vector_pointer,*(SIGMA),*(V_T));
     free(D_transpose);
     free(result);
     free(Sigma_inverse);
@@ -359,6 +359,11 @@ void PCA(int retention, int M, int N, float* D, float* U, float* SIGMA, float** 
     float sum = 0;
     float retention_reqd = retention*0.01;
     float* reduced_variance = (float*)malloc(sizeof(float)*N);
+
+    // This is the change
+    for(int idx_vs = 0;idx_vs<N;idx_vs++){
+    	*(SIGMA+idx_vs) = (*(SIGMA+idx_vs)) * (*(SIGMA+idx_vs));
+    }
 
     #pragma omp parallel
     {
