@@ -226,9 +226,9 @@ int main(int argc, char const *argv[]){
 	gettimeofday(&start, NULL);
 	LUdecomp(matrix_cp,p,lower,upper);
 	gettimeofday(&end, NULL);
-  
-    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
-    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
+
+	time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+	time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
 
 	// Generating the permutation matrix
 	for(i = 0;i<n;i++){
