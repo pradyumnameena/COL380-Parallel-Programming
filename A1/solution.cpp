@@ -1,98 +1,45 @@
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
 #include <vector>
-#include <string>
 #include <cmath>
-#include <omp.h>
+#include <cstdlib>
+#include <sys/time.h>
 
 using namespace std;
+float limit = 10000;
 
-void display(vector<float*> vec){
-	int n = vec.size();
-	for(int i = 0;i<n;i++){
-		for(int j = 0;j<n;j++){
-			cout << *(vec[i] + j) << " ";
-		}
-		cout << "" << endl;
-	}
-	cout << "***********" << endl;
-}
+// For random initialization
+vector<double*> initialize(int n){
+	int i,j;
+	vector<double*> matrix;
 
-vector<float*> matrix_mult(vector<float*> m1,vector<float*> m2){
-	int n = m1.size();
-	vector<float*> matrix;
-	for(int i = 0;i<n;i++){
-		float* address = (float*) malloc(n*sizeof(float));
+	for(i = 0;i<n;i++){
+		double* address = (double*) malloc(n*sizeof(double));
 		matrix.push_back(address);
-		for(int j = 0;j<n;j++){
-			*(matrix[i] + j) = 0;
-			for(int k = 0;k<n;k++){
-				*(matrix[i] + j) = *(matrix[i] + j) + (*(m1[i] + k) * *(m2[k] + j));
-			}
+		for(j = 0;j<n;j++){
+			*(matrix[i] + j) = drand48() * limit;
 		}
 	}
 	return matrix;
 }
 
-vector<float*> matrix_diff(vector<float*> m1,vector<float*> m2){
-	int n = m1.size();
-	vector<float*> matrix;
-	for(int i = 0;i<n;i++){
-		float* address = (float*) malloc(n*sizeof(float));
-		matrix.push_back(address);
-		for(int j = 0;j<n;j++){
-			*(matrix[i] + j) = (*(m1[i] + j)) - (*(m2[i] + j));
-		}
-	}
-	return matrix;
-}
-
-vector<float*> copy_matrix(vector<float*> m1){
-	int n = m1.size();
-	vector<float*> matrix;
-	for(int i = 0;i<n;i++){
-		float* address = (float*) malloc(n*sizeof(float));
-		matrix.push_back(address);
-		for(int j = 0;j<n;j++){
-			*(matrix[i] + j) = *(m1[i] + j);
-		}
-	}
-	return matrix;
-}
-
-float checker(vector<float*> m){
-	float ans = 0.0;
-	int n = m.size();
-	vector<float> matrix;
-
-	for(int i = 0;i<n;i++){
-		matrix.push_back(0.0);
-		for(int j = 0;j<n;j++){
-			matrix[i] = matrix[i] + (*(m[j]+i)) * (*(m[j]+i));
-		}
-	}
-
-	for(int i = 0;i<n;i++){
-		ans+=sqrt(matrix[i]);
-	}
-
-	return ans;
-}
-
-vector<float*> read_data(){
-	int n;
-	vector<float*> matrix;
+/* Reads matrix from a file
+	Format -
+	 1. first line should contain n - the dimension of matrix
+	 2. next n lines should contain n space separated matrix values */
+vector<double*> read_data(){
+	int i,j,n;
+	vector<double*> matrix;
 	string file_path = "./data.txt";
 
 	ifstream file;
 	file.open(file_path);
 	if(file.is_open()){
 		file >> n;
-		for(int i = 0;i<n;i++){
-			float* address = (float*) malloc(n*sizeof(float));
+		for(i = 0;i<n;i++){
+			double* address = (double*) malloc(n*sizeof(double));
 			matrix.push_back(address);
-			for(int j = 0;j<n;j++){
+			for(j = 0;j<n;j++){
 				file >> *(matrix[i]+j);
 			}
 		}
@@ -102,123 +49,196 @@ vector<float*> read_data(){
 	return matrix;
 }
 
-vector<float*> initialize(int n){
-	vector<float*> matrix;
-	for(int i = 0;i<n;i++){
-		float* address = (float*) malloc(n*sizeof(float));
+// Copies a matrix
+vector<double*> matrix_copy(vector<double*> m1){
+	int i,j,n;
+	n = m1.size();
+	vector<double*> matrix;
+	for(i = 0;i<n;i++){
+		double* address = (double*) malloc(n*sizeof(double));
 		matrix.push_back(address);
-		for(int j = 0;j<n;j++){
-			*(matrix[i] + j) = 1.0*i*j;
+		for(j = 0;j<n;j++){
+			*(matrix[i] + j) = *(m1[i] + j);
 		}
 	}
 	return matrix;
 }
 
-void LUdecomp(vector<float*> mat, vector<int>& perm, vector<float*> lower, vector<float*> upper){
-	int temp;
-	float max;
-	float* add;
-	int idx = -1;
-	int n = mat.size();
+// Matrix multiplication for square matrices
+vector<double*> matrix_mult(vector<double*> m1,vector<double*> m2){
+	int i,j,k,n;
+	double temp;
+	vector<double*> matrix;
+	
+	n = m1.size();
+	for(i = 0;i<n;i++){
+		double* address = (double*) malloc(n*sizeof(double));
+		matrix.push_back(address);
+		for(j = 0;j<n;j++){
+			temp = 0.0;
+			for(k = 0;k<n;k++){
+				temp += (*(m1[i] + k) * *(m2[k] + j)); 
+			}
+			*(matrix[i] + j) = temp;
+		}
+	}
+	return matrix;
+}
 
-	for(int k = 0;k<n;k++){
+// Displaying any square matrix
+void display(vector<double*> vec){
+	int i,j,n;
+	n = vec.size();
+	for(i = 0;i<n;i++){
+		for(j = 0;j<n;j++){
+			cout << *(vec[i] + j) << " ";
+		}
+		cout << endl;
+	}
+	cout << "**************THE END**************" << endl;
+}
+
+// Calculates L2,1 norm for m1-m2 matrix
+double checker(vector<double*> m1, vector<double*> m2){
+	double v1,v2,temp;
+	double ans = 0.0;
+	int i,j,n;
+	n = m1.size();
+
+	for(i = 0;i<n;i++){
+		temp = 0.0;
+		for(j = 0;j<n;j++){
+			v1 = *(m1[j] + i);
+			v2 = *(m2[j] + i);
+			temp+=((v1-v2)*(v1-v2));
+		}
+		ans+=sqrt(temp);
+	}
+
+	return ans;
+}
+
+// LU decomposition function
+void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vector<double*> upper){
+	double max;
+	double* add;
+	int i,j,n,temp,idx,col;
+	
+	n = mat.size();
+
+	// Loop on columns
+	for(col = 0;col<n;col++){
+		// Find index of row with maximum entry in the column
 		max = 0.0;
-		idx = k;
-		for(int i = k;i<n;i++){
-			if(abs(*(mat[i] + k))>max){
-				max = abs(*(mat[i] + k));
+		idx = col;
+		for(i = col;i<n;i++){
+			if(fabs(*(mat[i] + col))>max){
+				max = abs(*(mat[i] + col));
 				idx = i;
 			}
 		}
 
+		// Error -> Singular Matrix
 		if(max==0.0){
+			cout << "Singular Matrix" << endl;
 			return;
 		}
 		
-		temp = perm[k];
-		perm[k] = perm[idx];
+		// Swapping in permutation vector
+		temp = perm[col];
+		perm[col] = perm[idx];
 		perm[idx] = temp;
 
-		add = mat[k];
-		mat[k] = mat[idx];
+		// Swapping the rows
+		add = mat[col];
+		mat[col] = mat[idx];
 		mat[idx] = add;
 
-		for(int i = 0;i<k;i++){
-			max = *(lower[k] + i);
-			*(lower[k] + i) = *(lower[idx] + i);
+		// L[col,1:col-1] <-> L[idx,1:col-1]
+		for(i = 0;i<col;i++){
+			max = *(lower[col] + i);
+			*(lower[col] + i) = *(lower[idx] + i);
 			*(lower[idx] + i) = max;
 		}
 
-		*(upper[k] + k) = *(mat[k] + k);
+		// U[col,col] = A[col,col]
+		*(upper[col] + col) = *(mat[col] + col);
 
-		for(int i = k+1;i<n;i++){
-			*(lower[i] + k) = (*(mat[i] + k))/(*(upper[k] + k));
-			*(upper[k] + i) = *(mat[k] + i);
+		/*
+			L[i,col] = A[i,col]/U[col,col]
+			U[col,i] = A[col,i]
+		*/
+		for(i = col+1;i<n;i++){
+			*(lower[i] + col) = (*(mat[i] + col))/(*(upper[col] + col));
+			*(upper[col] + i) = *(mat[col] + i);
 		}
 
-		for(int i = k+1;i<n;i++){
-			for(int j = k+1;j<n;j++){
-				*(mat[i] + j) = *(mat[i] + j) - (*(lower[i] + k))*(*(upper[k] + j));
+		// A[i,j] -= (L[i,k]*U[k,j])
+		for(i = col+1;i<n;i++){
+			for(j = col+1;j<n;j++){
+				*(mat[i] + j) = *(mat[i] + j) - (*(lower[i] + col))*(*(upper[col] + j));
 			}
 		}
-	}
-
-	for(int i = 0;i<n;i++){
-		cout << perm[i] << endl;
 	}
 }
 
-// void LUdecomp_OMP(vector<float*> mat, vector<int> perm, vector<float*> lower, vector<float*> upper,int num_threads){
-
-// 	// return
-// }
-
 int main(int argc, char const *argv[]){
-	vector<int> perm;
-	vector<float*> lower;
-	vector<float*> upper;
-	vector<float*> identity;
-	vector<float*> matrix = read_data();
-	vector<float*> temp = copy_matrix(matrix);
+	// Permutation vector, lower and upper matrix, permutation matrix, Matrix, mMatrix copy
+	vector<int> p;
+	vector<double*> lower;
+	vector<double*> upper;
+	vector<double*> perm;
+	struct timeval start, end;
+	double time_taken;
 	
+	vector<double*> matrix = read_data();
+	// vector<double*> matrix = initialize(100);
+	vector<double*> matrix_cp = matrix_copy(matrix);
+	
+	int i,j,k;
 	int n = matrix.size();
-	for(int i = 0;i<n;i++){
-		perm.push_back(i);
+
+	// P[i] = i
+	for(i = 0;i<n;i++){
+		p.push_back(i);
 	}
 
-	for(int i = 0;i<n;i++){
-		float* add1 = (float*) malloc(n*sizeof(float));
-		float* add2 = (float*) malloc(n*sizeof(float));
-		float* add3 = (float*) malloc(n*sizeof(float));
+	// Allocating the memory and inserting into vectors
+	for(i = 0;i<n;i++){
+		double* add1 = (double*)malloc(n*sizeof(double));
+		double* add2 = (double*)malloc(n*sizeof(double));
+		double* add3 = (double*)malloc(n*sizeof(double));
 		lower.push_back(add1);
 		upper.push_back(add2);
-		identity.push_back(add3);
+		perm.push_back(add3);
 	}
 
-	for(int i = 0;i<n;i++){
-		for(int j = 0;j<n;j++){
+	// Initialising all the matrices
+	for(i = 0;i<n;i++){
+		for(j = 0;j<n;j++){
 			*(upper[i] + j) = 0.0;
 			*(lower[i] + j) = 0.0;
-			*(identity[i] + j) = 0.0;
-			if(i==j){
-				*(lower[i] + j) = 1.0;
-			}
+			*(perm[i] + j) = 0.0;
 		}
+		*(lower[i] + i) = 1.0;
 	}
 
-	// int num_threads = 1;
-	LUdecomp(temp,perm,lower,upper);
-	// LUdecomp_OMP(matrix,perm,lower,upper,num_threads);
+	gettimeofday(&start, NULL);
+	LUdecomp(matrix_cp,p,lower,upper);
+	gettimeofday(&end, NULL);
+  
+    time_taken = (end.tv_sec - start.tv_sec) * 1e6;
+    time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
 
-	for(int i = 0;i<n;i++){
-		cout << perm[i] << endl;
-		*(identity[i] + perm[i]) = 1.0;
+	// Generating the permutation matrix
+	for(i = 0;i<n;i++){
+		*(perm[i] + p[i]) = 1.0;
 	}
 
-	
-	vector<float*> prod1 = matrix_mult(identity,matrix);
-	vector<float*> prod2 = matrix_mult(lower,upper);
-	vector<float*> diff = matrix_diff(prod1,prod2);
-	float ans = checker(diff);
-	cout << ans << endl;
+	// Calculating the L2,1 norm
+	vector<double*> PA = matrix_mult(perm,matrix);
+	vector<double*> LU = matrix_mult(lower,upper);
+	double ans = checker(PA,LU);
+	cout << "L2,1 norm = " << ans << endl;
+	cout << "Time taken by program is : " << time_taken << " sec" << endl; 
 }
