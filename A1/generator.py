@@ -6,7 +6,7 @@ def generate_data():
 	file.write(str(n) + "\n")
 	for i in range(n):
 		for j in range(n):
-			file.write(str(10000.0*random.random()) + " ")
+			file.write(str(10.0*random.random()) + " ")
 		if i!=n-1:
 			file.write("\n")
 	file.close()
