@@ -6,9 +6,8 @@
 #include <sys/time.h>
 
 using namespace std;
-float limit = 10000;
+double limit = 1000;
 
-// For random initialization
 vector<double*> initialize(int n){
 	int i,j;
 	vector<double*> matrix;
@@ -23,10 +22,6 @@ vector<double*> initialize(int n){
 	return matrix;
 }
 
-/* Reads matrix from a file
-	Format -
-	 1. first line should contain n - the dimension of matrix
-	 2. next n lines should contain n space separated matrix values */
 vector<double*> read_data(){
 	int i,j,n;
 	vector<double*> matrix;
@@ -49,7 +44,6 @@ vector<double*> read_data(){
 	return matrix;
 }
 
-// Copies a matrix
 vector<double*> matrix_copy(vector<double*> m1){
 	int i,j,n;
 	n = m1.size();
@@ -64,28 +58,6 @@ vector<double*> matrix_copy(vector<double*> m1){
 	return matrix;
 }
 
-// Matrix multiplication for square matrices
-vector<double*> matrix_mult(vector<double*> m1,vector<double*> m2){
-	int i,j,k,n;
-	double temp;
-	vector<double*> matrix;
-	
-	n = m1.size();
-	for(i = 0;i<n;i++){
-		double* address = (double*) malloc(n*sizeof(double));
-		matrix.push_back(address);
-		for(j = 0;j<n;j++){
-			temp = 0.0;
-			for(k = 0;k<n;k++){
-				temp += (*(m1[i] + k) * *(m2[k] + j)); 
-			}
-			*(matrix[i] + j) = temp;
-		}
-	}
-	return matrix;
-}
-
-// Displaying any square matrix
 void display(vector<double*> vec){
 	int i,j,n;
 	n = vec.size();
@@ -98,19 +70,21 @@ void display(vector<double*> vec){
 	cout << "**************THE END**************" << endl;
 }
 
-// Calculates L2,1 norm for m1-m2 matrix
-double checker(vector<double*> m1, vector<double*> m2){
-	double v1,v2,temp;
-	double ans = 0.0;
-	int i,j,n;
-	n = m1.size();
+double checker(vector<int>& perm, vector<double*> mat, vector<double*> lower, vector<double*> upper){
+	double v1,v2,temp,ans;
+	int i,j,k,n;
 
-	for(i = 0;i<n;i++){
+	n = mat.size();
+	ans = 0.0;
+	for(j = 0;j<n;j++){
 		temp = 0.0;
-		for(j = 0;j<n;j++){
-			v1 = *(m1[j] + i);
-			v2 = *(m2[j] + i);
-			temp+=((v1-v2)*(v1-v2));
+		for(i = 0;i<n;i++){
+			v1 = *(mat[perm[i]] + j);
+			v2 = 0.0;
+			for(k = 0;k<n;k++){
+				v2+=((*(lower[i] + k)) * (*(upper[k] + j)));
+			}
+			temp+=((v2-v1)*(v2-v1));
 		}
 		ans+=sqrt(temp);
 	}
@@ -118,7 +92,6 @@ double checker(vector<double*> m1, vector<double*> m2){
 	return ans;
 }
 
-// LU decomposition function
 void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vector<double*> upper){
 	double max;
 	double* add;
@@ -126,54 +99,43 @@ void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vec
 	
 	n = mat.size();
 
-	// Loop on columns
 	for(col = 0;col<n;col++){
-		// Find index of row with maximum entry in the column
+		cout << col << endl;
 		max = 0.0;
 		idx = col;
 		for(i = col;i<n;i++){
 			if(fabs(*(mat[i] + col))>max){
-				max = abs(*(mat[i] + col));
+				max = fabs(*(mat[i] + col));
 				idx = i;
 			}
 		}
 
-		// Error -> Singular Matrix
 		if(max==0.0){
 			cout << "Singular Matrix" << endl;
 			return;
 		}
 		
-		// Swapping in permutation vector
 		temp = perm[col];
 		perm[col] = perm[idx];
 		perm[idx] = temp;
 
-		// Swapping the rows
 		add = mat[col];
 		mat[col] = mat[idx];
 		mat[idx] = add;
 
-		// L[col,1:col-1] <-> L[idx,1:col-1]
+		*(upper[col] + col) = *(mat[col] + col);
+
 		for(i = 0;i<col;i++){
 			max = *(lower[col] + i);
 			*(lower[col] + i) = *(lower[idx] + i);
 			*(lower[idx] + i) = max;
 		}
 
-		// U[col,col] = A[col,col]
-		*(upper[col] + col) = *(mat[col] + col);
-
-		/*
-			L[i,col] = A[i,col]/U[col,col]
-			U[col,i] = A[col,i]
-		*/
 		for(i = col+1;i<n;i++){
 			*(lower[i] + col) = (*(mat[i] + col))/(*(upper[col] + col));
 			*(upper[col] + i) = *(mat[col] + i);
 		}
 
-		// A[i,j] -= (L[i,k]*U[k,j])
 		for(i = col+1;i<n;i++){
 			for(j = col+1;j<n;j++){
 				*(mat[i] + j) = *(mat[i] + j) - (*(lower[i] + col))*(*(upper[col] + j));
@@ -183,62 +145,59 @@ void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vec
 }
 
 int main(int argc, char const *argv[]){
-	// Permutation vector, lower and upper matrix, permutation matrix, Matrix, mMatrix copy
-	vector<int> p;
+	vector<int> perm;
 	vector<double*> lower;
 	vector<double*> upper;
-	vector<double*> perm;
 	struct timeval start, end;
-	double time_taken;
+	double time_taken,time_taken2;
 	
-	vector<double*> matrix = read_data();
-	// vector<double*> matrix = initialize(100);
+	int n = atoi(argv[1]);
+	int check = atoi(argv[2]);
+
+	// vector<double*> matrix = read_data();
+	vector<double*> matrix = initialize(n);
 	vector<double*> matrix_cp = matrix_copy(matrix);
 	
 	int i,j,k;
-	int n = matrix.size();
 
-	// P[i] = i
 	for(i = 0;i<n;i++){
-		p.push_back(i);
+		perm.push_back(i);
 	}
 
-	// Allocating the memory and inserting into vectors
 	for(i = 0;i<n;i++){
 		double* add1 = (double*)malloc(n*sizeof(double));
 		double* add2 = (double*)malloc(n*sizeof(double));
-		double* add3 = (double*)malloc(n*sizeof(double));
 		lower.push_back(add1);
 		upper.push_back(add2);
-		perm.push_back(add3);
 	}
 
-	// Initialising all the matrices
 	for(i = 0;i<n;i++){
 		for(j = 0;j<n;j++){
 			*(upper[i] + j) = 0.0;
 			*(lower[i] + j) = 0.0;
-			*(perm[i] + j) = 0.0;
 		}
 		*(lower[i] + i) = 1.0;
 	}
 
+	// cout << "Function call started" << endl;
 	gettimeofday(&start, NULL);
-	LUdecomp(matrix_cp,p,lower,upper);
+	LUdecomp(matrix_cp,perm,lower,upper);
 	gettimeofday(&end, NULL);
+	// cout << "Function call ended" << endl;
 
 	time_taken = (end.tv_sec - start.tv_sec) * 1e6;
 	time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
-
-	// Generating the permutation matrix
-	for(i = 0;i<n;i++){
-		*(perm[i] + p[i]) = 1.0;
-	}
-
-	// Calculating the L2,1 norm
-	vector<double*> PA = matrix_mult(perm,matrix);
-	vector<double*> LU = matrix_mult(lower,upper);
-	double ans = checker(PA,LU);
-	cout << "L2,1 norm = " << ans << endl;
 	cout << "Time taken by program is : " << time_taken << " sec" << endl; 
+
+	if(check==1){
+		gettimeofday(&start, NULL);
+		double ans = checker(perm,matrix,lower,upper);
+		gettimeofday(&end, NULL);
+		
+		time_taken2 = (end.tv_sec - start.tv_sec) * 1e6;
+		time_taken2 = (time_taken2 + (end.tv_usec - start.tv_usec)) * 1e-6;
+		
+		cout << "L2,1 norm = " << ans << endl;
+		cout << "Time taken for checking : " << time_taken2 << " sec" << endl;
+	}
 }
