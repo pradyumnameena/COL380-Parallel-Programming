@@ -1,6 +1,6 @@
 import random
 
-def generate_data():
+def main():
 	n = input()
 	file = open("data.txt","w")
 	file.write(str(n) + "\n")
@@ -10,16 +10,6 @@ def generate_data():
 		if i!=n-1:
 			file.write("\n")
 	file.close()
-
-def checker():
-	return
-
-def main():
-	param = input()
-	if param==0:
-		generate_data()
-	else:
-		checker()
 
 if __name__ == '__main__':
 	main()
