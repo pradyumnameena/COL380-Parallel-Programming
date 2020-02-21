@@ -44,6 +44,31 @@ vector<double*> read_data(){
 	return matrix;
 }
 
+void write_data(vector<double*> matrix,string name){
+	int n = matrix.size();
+	ofstream file;
+	file.open("./" + name);
+	
+	if(file.is_open()){
+		file << n;
+		file << "\n";
+		for(int i = 0;i<n;i++){
+			for(int j = 0;j<n;j++){
+				file << *(matrix[i] + j);
+				if(j==n-1){
+					if(i!=n-1){
+						file << "\n";
+					}
+				}else{
+					file << " ";
+				}
+			}
+		}
+	}
+
+	file.close();
+}
+
 vector<double*> matrix_copy(vector<double*> m1){
 	int i,j,n;
 	n = m1.size();
@@ -100,7 +125,6 @@ void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vec
 	n = mat.size();
 
 	for(col = 0;col<n;col++){
-		cout << col << endl;
 		max = 0.0;
 		idx = col;
 		for(i = col;i<n;i++){
@@ -148,6 +172,7 @@ int main(int argc, char const *argv[]){
 	vector<int> perm;
 	vector<double*> lower;
 	vector<double*> upper;
+	vector<double*> perm_final;
 	struct timeval start, end;
 	double time_taken,time_taken2;
 	
@@ -167,27 +192,28 @@ int main(int argc, char const *argv[]){
 	for(i = 0;i<n;i++){
 		double* add1 = (double*)malloc(n*sizeof(double));
 		double* add2 = (double*)malloc(n*sizeof(double));
+		double* add3 = (double*)malloc(n*sizeof(double));
 		lower.push_back(add1);
 		upper.push_back(add2);
+		perm_final.push_back(add3);
 	}
 
 	for(i = 0;i<n;i++){
 		for(j = 0;j<n;j++){
 			*(upper[i] + j) = 0.0;
 			*(lower[i] + j) = 0.0;
+			*(perm_final[i] + j) = 0.0;
 		}
 		*(lower[i] + i) = 1.0;
 	}
 
-	// cout << "Function call started" << endl;
 	gettimeofday(&start, NULL);
 	LUdecomp(matrix_cp,perm,lower,upper);
 	gettimeofday(&end, NULL);
-	// cout << "Function call ended" << endl;
 
 	time_taken = (end.tv_sec - start.tv_sec) * 1e6;
 	time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
-	cout << "Time taken by program is : " << time_taken << " sec" << endl; 
+	cout << "LU Decomposition in " << time_taken << " sec" << endl; 
 
 	if(check==1){
 		gettimeofday(&start, NULL);
@@ -200,4 +226,17 @@ int main(int argc, char const *argv[]){
 		cout << "L2,1 norm = " << ans << endl;
 		cout << "Time taken for checking : " << time_taken2 << " sec" << endl;
 	}
+
+	// Writing into files
+	for(int i = 0;i<n;i++){
+		*(perm_final[i] + perm[i]) = 1.0;
+	}
+
+	string P_name = "P_" + to_string(n) + ".txt";
+	string L_name = "L_" + to_string(n) + ".txt";
+	string U_name = "U_" + to_string(n) + ".txt";
+	
+	write_data(perm_final,P_name);
+	write_data(lower,L_name);
+	write_data(upper,U_name);
 }
