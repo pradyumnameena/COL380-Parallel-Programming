@@ -15,8 +15,6 @@ struct DataPacket{
 	int idx;
 };
 
-#pragma omp declare reduction(maximum : struct DataPacket : omp_out = fabs(omp_in.val) < fabs(omp_out.val) ? fabs(omp_in) : fabs(omp_out))
-
 vector<double*> initialize(int n){
 	int i,j;
 	vector<double*> matrix;
@@ -51,6 +49,31 @@ vector<double*> read_data(){
 	
 	file.close();
 	return matrix;
+}
+
+void write_data(vector<double*> matrix,string name){
+	int n = matrix.size();
+	ofstream file;
+	file.open("./" + name);
+	
+	if(file.is_open()){
+		file << n;
+		file << "\n";
+		for(int i = 0;i<n;i++){
+			for(int j = 0;j<n;j++){
+				file << *(matrix[i] + j);
+				if(j==n-1){
+					if(i!=n-1){
+						file << "\n";
+					}
+				}else{
+					file << " ";
+				}
+			}
+		}
+	}
+
+	file.close();
 }
 
 vector<double*> matrix_copy(vector<double*> m1){
@@ -89,11 +112,10 @@ double checker(vector<int>& perm, vector<double*> mat, vector<double*> lower, ve
 		temp = 0.0;
 		for(i = 0;i<n;i++){
 			v1 = *(mat[perm[i]] + j);
-			v2 = 0.0;
 			for(k = 0;k<n;k++){
-				v2+=((*(lower[i] + k)) * (*(upper[k] + j)));
+				v1-=((*(lower[i] + k)) * (*(upper[k] + j)));
 			}
-			temp+=((v2-v1)*(v2-v1));
+			temp+=(v1*v1);
 		}
 		ans+=sqrt(temp);
 	}
@@ -108,24 +130,24 @@ void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vec
 	maxima.value = 0.0;
 	maxima.idx = 0;
 	
-	#pragma omp parallel num_threads(thread_count),shared(mat,lower,upper,idx,n) 
+	#pragma omp parallel num_threads(thread_count) 
 	{
 	
-	#pragma omp for schedule(static) reduction(maximum: maxima)
-		for(int i = 0;i<n;i++){
-			if(fabs(*(mat[i]))>maxima.value){
-				maxima.value = fabs(*(mat[i]));
-				maxima.idx = i;
-			}
-		}
-
 		for(int col = 0;col<n;col++){
+
 	#pragma omp master
 		{
+
+			for(int i = col;i<n;i++){
+				if(fabs(*(mat[i] + col))>fabs(maxima.value)){
+					maxima.value = *(mat[i] + col);
+					maxima.idx = i;
+				}
+			}
+
 			idx = maxima.idx;
 			if(maxima.value==0.0){
 				cout << "Singular Matrix" << endl;
-				return;
 			}
 			
 			int temp1 = perm[col];
@@ -142,28 +164,25 @@ void LUdecomp(vector<double*> mat, vector<int>& perm, vector<double*> lower, vec
 
 	#pragma omp barrier
 	#pragma omp for schedule(static)
-			for(int i = 0;i<n;i++){
-				if(i<col){
-					double temp2 = *(lower[col] + i);
-					*(lower[col] + i) = *(lower[idx] + i);
-					*(lower[idx] + i) = temp2;
-				}else if(i>col){
-					*(lower[i] + col) = (*(mat[i] + col))/(*(upper[col] + col));
-					*(upper[col] + i) = *(mat[col] + i);
-				}
-			}
+		for(int i = 0;i<col;i++){
+			double temp2 = *(lower[col] + i);
+			*(lower[col] + i) = *(lower[idx] + i);
+			*(lower[idx] + i) = temp2;
+		}
+	
+	#pragma omp for schedule(static)
+		for(int i = col+1;i<n;i++){
+			*(lower[i] + col) = (*(mat[i] + col))/(*(upper[col] + col));
+			*(upper[col] + i) = *(mat[col] + i);
+		}
 
-	#pragma omp barrier
-	#pragma omp for schedule(static) reduction(maximum:maxima) collapse(2)
-			for(int i = col+1;i<n;i++){
-				for(int j = col+1;j<n;j++){
-					*(mat[i] + j) = *(mat[i] + j) - (*(lower[i] + col))*(*(upper[col] + j));
-				}
-				if(fabs(*(mat[i] + col + 1))>maxima.value){
-					maxima.value = *(mat[i] + col + 1);
-					maxima.idx = i;
-				}
+	#pragma omp for schedule(static)
+		for(int i = col+1;i<n;i++){
+			for(int j = col+1;j<n;j++){
+				*(mat[i] + j) = *(mat[i] + j) - (*(lower[i] + col))*(*(upper[col] + j));
 			}
+		}
+
 	}
 	}
 }
@@ -172,6 +191,7 @@ int main(int argc, char const *argv[]){
 	vector<int> perm;
 	vector<double*> lower;
 	vector<double*> upper;
+	vector<double*> perm_final;
 	struct timeval start, end;
 	double time_taken,time_taken2;
 	
@@ -192,14 +212,17 @@ int main(int argc, char const *argv[]){
 	for(i = 0;i<n;i++){
 		double* add1 = (double*)malloc(n*sizeof(double));
 		double* add2 = (double*)malloc(n*sizeof(double));
+		double* add3 = (double*)malloc(n*sizeof(double));
 		lower.push_back(add1);
 		upper.push_back(add2);
+		perm_final.push_back(add3);
 	}
 
 	for(i = 0;i<n;i++){
 		for(j = 0;j<n;j++){
 			*(upper[i] + j) = 0.0;
 			*(lower[i] + j) = 0.0;
+			*(perm_final[i] + j) = 0.0;
 		}
 		*(lower[i] + i) = 1.0;
 	}
@@ -210,9 +233,7 @@ int main(int argc, char const *argv[]){
 
 	time_taken = (end.tv_sec - start.tv_sec) * 1e6;
 	time_taken = (time_taken + (end.tv_usec - start.tv_usec)) * 1e-6;
-	cout << "Thread count = " << thread_count << endl;
-	cout << "Matrix size = " << n << endl;
-	cout << "Time taken by program is : " << time_taken << " sec" << endl; 
+	cout << "LU Decomposition in " << time_taken << " sec" << endl; 
 
 	if(check==1){
 		gettimeofday(&start, NULL);
@@ -225,4 +246,17 @@ int main(int argc, char const *argv[]){
 		cout << "L2,1 norm = " << ans << endl;
 		cout << "Time taken for checking : " << time_taken2 << " sec" << endl;
 	}
+
+	// Writing into files
+	for(int i = 0;i<n;i++){
+		*(perm_final[i] + perm[i]) = 1.0;
+	}
+
+	string P_name = "P_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+	string L_name = "L_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+	string U_name = "U_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+	
+	write_data(perm_final,P_name);
+	write_data(lower,L_name);
+	write_data(upper,U_name);
 }
