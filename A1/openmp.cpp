@@ -29,15 +29,13 @@ vector<double*> initialize(int n){
 	return matrix;
 }
 
-vector<double*> read_data(){
-	int i,j,n;
+vector<double*> read_data(string file_path,int n){
+	int i,j;
 	vector<double*> matrix;
-	string file_path = "./data.txt";
 
 	ifstream file;
 	file.open(file_path);
 	if(file.is_open()){
-		file >> n;
 		for(i = 0;i<n;i++){
 			double* address = (double*) malloc(n*sizeof(double));
 			matrix.push_back(address);
@@ -57,8 +55,6 @@ void write_data(vector<double*> matrix,string name){
 	file.open("./" + name);
 	
 	if(file.is_open()){
-		file << n;
-		file << "\n";
 		for(int i = 0;i<n;i++){
 			for(int j = 0;j<n;j++){
 				file << *(matrix[i] + j);
@@ -198,9 +194,11 @@ int main(int argc, char const *argv[]){
 	int n = atoi(argv[1]);
 	thread_count = atoi(argv[2]);
 	int check = atoi(argv[3]);
-	
-	// vector<double*> matrix = read_data();
-	vector<double*> matrix = initialize(n);
+	string file_path = argv[4];
+	int write = atoi(argv[5]);
+
+	vector<double*> matrix = read_data(file_path,n);
+	// vector<double*> matrix = initialize(n);
 	vector<double*> matrix_cp = matrix_copy(matrix);
 	
 	int i,j,k;
@@ -248,15 +246,18 @@ int main(int argc, char const *argv[]){
 	}
 
 	// Writing into files
-	for(int i = 0;i<n;i++){
-		*(perm_final[i] + perm[i]) = 1.0;
-	}
 
-	string P_name = "P_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
-	string L_name = "L_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
-	string U_name = "U_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
-	
-	write_data(perm_final,P_name);
-	write_data(lower,L_name);
-	write_data(upper,U_name);
+	if(write==1){
+		for(int i = 0;i<n;i++){
+			*(perm_final[i] + perm[i]) = 1.0;
+		}
+
+		string P_name = "P_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+		string L_name = "L_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+		string U_name = "U_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+		
+		write_data(perm_final,P_name);
+		write_data(lower,L_name);
+		write_data(upper,U_name);
+	}
 }
