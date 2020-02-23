@@ -10,7 +10,7 @@ def write_to_file(file_name,rows,cols):
 	file.close()
 
 def main():
-	n = input()
+	n = int(input())
 	file_name1 = "A_" + str(n) + ".txt"
 	file_name2 = "B_" + str(n) + ".txt"
 	write_to_file(file_name1,n,32)
