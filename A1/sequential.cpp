@@ -232,9 +232,9 @@ int main(int argc, char const *argv[]){
 			*(perm_final[i] + perm[i]) = 1.0;
 		}
 
-		string P_name = "P_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
-		string L_name = "L_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
-		string U_name = "U_" + to_string(n) + "_" + to_string(thread_count) + ".txt";
+		string P_name = "P_" + to_string(n) + ".txt";
+		string L_name = "L_" + to_string(n) + ".txt";
+		string U_name = "U_" + to_string(n) + ".txt";
 		
 		write_data(perm_final,P_name);
 		write_data(lower,L_name);
