@@ -5,6 +5,11 @@
 
 float tolerance = 0.000001;
 
+float my_random(){
+   float val = (double)rand()/(double)RAND_MAX;
+   return val;
+}
+
 float* read_data(char str[],int rows,int cols){
    float* array = (float*)malloc(rows*cols*sizeof(float));
 
@@ -35,6 +40,18 @@ void write_data(char file_name[],float* matrix,int rows,int cols){
    }
    fclose(file_pointer);
    return;
+}
+
+float* generate_data(int rows,int cols){
+   float* arr = (float*)malloc(rows*cols*sizeof(float));
+
+   for(int i = 0;i<rows;i++){
+      for(int j = 0;j<cols;j++){
+         arr[i*cols + j] = my_random();
+      }
+   }
+
+   return arr;
 }
 
 void print(float* array,int rows,int cols){
@@ -77,8 +94,10 @@ int main(int argc, char* argv[]){
    int n = atoi(argv[1]);
    char* file_name1 = argv[2];
    char* file_name2 = argv[3];
-   float* A = read_data(file_name1,n,32);
-   float* B = read_data(file_name2,32,n);
+   // float* A = read_data(file_name1,n,32);
+   // float* B = read_data(file_name2,32,n);
+   float* A = generate_data(n,32);
+   float* B = generate_data(32,n);
    float* prod = (float*)malloc(n*sizeof(float));
 
    multiply(A,B,prod,n);
