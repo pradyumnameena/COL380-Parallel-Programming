@@ -1,3 +1,4 @@
+import sys
 import random
 
 def write_to_file(file_name,rows,cols):
@@ -10,9 +11,9 @@ def write_to_file(file_name,rows,cols):
 	file.close()
 
 def main():
-	n = int(input())
-	file_name1 = "A_" + str(n) + ".txt"
-	file_name2 = "B_" + str(n) + ".txt"
+	n = int(sys.argv[1])
+	file_name1 = "./data/A_" + str(n) + ".txt"
+	file_name2 = "./data/B_" + str(n) + ".txt"
 	write_to_file(file_name1,n,32)
 	write_to_file(file_name2,32,n)
 
