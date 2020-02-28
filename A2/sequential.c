@@ -10,9 +10,7 @@ float my_random(){
    return val;
 }
 
-float* read_data(char str[],int rows,int cols){
-   float* array = (float*)malloc(rows*cols*sizeof(float));
-
+void read_data(float* array,char str[],int rows,int cols){
    FILE *file_pointer;
    file_pointer = fopen(str,"r");
    for(int i = 0;i<rows;i++){
@@ -22,7 +20,6 @@ float* read_data(char str[],int rows,int cols){
    }
 
    fclose(file_pointer);
-   return array;
 }
 
 void write_data(char file_name[],float* matrix,int rows,int cols){
@@ -42,16 +39,12 @@ void write_data(char file_name[],float* matrix,int rows,int cols){
    return;
 }
 
-float* generate_data(int rows,int cols){
-   float* arr = (float*)malloc(rows*cols*sizeof(float));
-
+void generate_data(float* arr,int rows,int cols){
    for(int i = 0;i<rows;i++){
       for(int j = 0;j<cols;j++){
          arr[i*cols + j] = my_random();
       }
    }
-
-   return arr;
 }
 
 void print(float* array,int rows,int cols){
@@ -92,13 +85,19 @@ int IsEqual(float* A,float* B,int m,int n){
 
 int main(int argc, char* argv[]){
    int n = atoi(argv[1]);
+   int m = 32;
    char* file_name1 = argv[2];
    char* file_name2 = argv[3];
-   // float* A = read_data(file_name1,n,32);
-   // float* B = read_data(file_name2,32,n);
-   float* A = generate_data(n,32);
-   float* B = generate_data(32,n);
-   float* prod = (float*)malloc(n*sizeof(float));
+   
+   float* A = (float*)malloc(n*m*sizeof(float));
+   float* B = (float*)malloc(n*m*sizeof(float));
+   float* prod = (float*)malloc(n*n*sizeof(float));
+   
+   // read_data(A,file_name1,n,m);
+   // read_data(B,file_name2,m,n);
+
+   generate_data(A,n,m);
+   generate_data(B,m,n);
 
    multiply(A,B,prod,n);
 
