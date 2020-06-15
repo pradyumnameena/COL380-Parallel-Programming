@@ -155,12 +155,12 @@ int main(int argc, char* argv[]){
       // print(prodS,n,n);
       IsEqual(prodS,prodM,n*n);
 
-      char file_name[30] = "product_C_";
-      sprintf(file_name+10,"%d",n);
-      strcat(file_name,".txt");
-      write_data(file_name,prodM,n,n);
+      // char file_name[30] = "product_C_";
+      // sprintf(file_name+10,"%d",n);
+      // strcat(file_name,".txt");
+      // write_data(file_name,prodM,n,n);
    }
 
    MPI_Finalize();
    return 0;
-} 
+}

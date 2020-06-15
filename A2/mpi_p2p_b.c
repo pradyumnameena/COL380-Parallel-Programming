@@ -38,7 +38,6 @@ void write_data(char file_name[],float* matrix,int rows,int cols){
       }
    }
    fclose(file_pointer);
-   return;
 }
 
 void generate_data(float* arr,int rows,int cols){
@@ -131,8 +130,6 @@ int main(int argc, char* argv[]){
          if(i==num_workers && num_workers>1){
             load = n%num_workers;
          }
-         MPI_Send(&n,1,MPI_INT,i,0,MPI_COMM_WORLD);
-         MPI_Send(&m,1,MPI_INT,i,0,MPI_COMM_WORLD);
          MPI_Send(&load,1,MPI_INT,i,0,MPI_COMM_WORLD);
          MPI_Send(&A[idx*m],load*m,MPI_FLOAT,i,0,MPI_COMM_WORLD);
          MPI_Send(&B[0],n*m,MPI_FLOAT,i,0,MPI_COMM_WORLD);
@@ -163,30 +160,28 @@ int main(int argc, char* argv[]){
       // print(prodS,n,n);
       IsEqual(prodS,prodM,n*n);
 
-      char file_name[30] = "product_P2PB_";
-      sprintf(file_name+13,"%d",n);
-      strcat(file_name,".txt");
-      write_data(file_name,prodM,n,n);
+      // char file_name[30] = "product_P2PB_";
+      // sprintf(file_name+13,"%d",n);
+      // strcat(file_name,".txt");
+      // write_data(file_name,prodM,n,n);
       
    }else{
-      MPI_Recv(&num_rows,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-      MPI_Recv(&num_cols,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
       MPI_Recv(&load,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-      MPI_Recv(&A[0],load*num_cols,MPI_FLOAT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-      MPI_Recv(&B[0],num_rows*num_cols,MPI_FLOAT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      MPI_Recv(&A[0],load*m,MPI_FLOAT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      MPI_Recv(&B[0],n*m,MPI_FLOAT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 
       double val;
       for(int i = 0;i<load;i++){
-         for(int j = 0;j<num_rows;j++){
+         for(int j = 0;j<n;j++){
             val = 0;
-            for(int k = 0;k<num_cols;k++){
-               val+=(A[i*num_cols + k]*B[j*num_cols + k]);
+            for(int k = 0;k<m;k++){
+               val+=(A[i*m + k]*B[j*m + k]);
             }
-            C[i*num_rows+j] = val;
+            C[i*n+j] = val;
          }
       }
 
-      MPI_Send(&C[0],load*num_rows,MPI_FLOAT,0,0,MPI_COMM_WORLD);
+      MPI_Send(&C[0],load*n,MPI_FLOAT,0,0,MPI_COMM_WORLD);
    }
 
    MPI_Finalize();

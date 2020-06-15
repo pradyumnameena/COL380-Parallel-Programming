@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 float tolerance = 0.000001;
 
@@ -99,12 +100,18 @@ int main(int argc, char* argv[]){
    generate_data(A,n,m);
    generate_data(B,m,n);
 
-   multiply(A,B,prod,n);
-
-   char file_name[30] = "product_";
-   sprintf(file_name+8,"%d",n);
-   strcat(file_name,".txt");
-   write_data(file_name,prod,n,n);
+   clock_t t;
+   t = clock();
    
+   multiply(A,B,prod,n);
+   
+   t = clock()-t;
+   double time_taken = ((double)t)/CLOCKS_PER_SEC;
+   printf("Time taken for sequential call:- %lf\n",time_taken);
+
+   // char file_name[30] = "product_";
+   // sprintf(file_name+8,"%d",n);
+   // strcat(file_name,".txt");
+   // write_data(file_name,prod,n,n);
    return 0;
 }

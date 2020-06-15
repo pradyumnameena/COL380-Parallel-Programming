@@ -105,20 +105,17 @@ int main(int argc, char* argv[]){
    float* prodM = (float*)malloc(n*n*sizeof(float));
    float* prodS = (float*)malloc(n*n*sizeof(float));
 
-   MPI_Request sends[5*num_workers];
-   MPI_Status send_status[5*num_workers];
+   MPI_Request sends[3*num_workers];
+   MPI_Status send_status[3*num_workers];
 
    MPI_Request receive[num_workers];
    MPI_Status receive_status[num_workers];
 
-   MPI_Request proc_receive1[3];
-   MPI_Status proc_receive_status1[3];
-
    MPI_Request proc_receive2[2];
    MPI_Status proc_receive_status2[2];
 
-   MPI_Request send_req;
-   MPI_Status send_stat;
+   MPI_Request send_req,proc_receive1;
+   MPI_Status send_stat,proc_receive_status1;
 
    // Initialize the MPI Environment
    MPI_Init(&argc,&argv);
@@ -145,15 +142,13 @@ int main(int argc, char* argv[]){
          if(i==num_workers && num_workers>1){
             load = n%num_workers;
          }
-         MPI_Isend(&n,1,MPI_INT,i,0,MPI_COMM_WORLD,&sends[5*(i-1)]);
-         MPI_Isend(&m,1,MPI_INT,i,0,MPI_COMM_WORLD,&sends[5*(i-1) + 1]);
-         MPI_Isend(&load,1,MPI_INT,i,0,MPI_COMM_WORLD,&sends[5*(i-1) + 2]);
-         MPI_Isend(&A[idx*m],load*m,MPI_FLOAT,i,0,MPI_COMM_WORLD,&sends[5*(i-1) + 3]);
-         MPI_Isend(&B[0],n*m,MPI_FLOAT,i,0,MPI_COMM_WORLD,&sends[5*(i-1) + 4]);
+         MPI_Isend(&load,1,MPI_INT,i,0,MPI_COMM_WORLD,&sends[3*(i-1)]);
+         MPI_Isend(&A[idx*m],load*m,MPI_FLOAT,i,0,MPI_COMM_WORLD,&sends[3*(i-1) + 1]);
+         MPI_Isend(&B[0],n*m,MPI_FLOAT,i,0,MPI_COMM_WORLD,&sends[3*(i-1) + 2]);
          idx+=load;
       }
 
-      MPI_Waitall(5*num_workers,sends,send_status);
+      MPI_Waitall(3*num_workers,sends,send_status);
 
       idx = 0;
       load = n/num_workers;
@@ -181,33 +176,31 @@ int main(int argc, char* argv[]){
       // print(prodS,n,n);
       IsEqual(prodS,prodM,n*n);
 
-      char file_name[30] = "product_P2PN_";
-      sprintf(file_name+13,"%d",n);
-      strcat(file_name,".txt");
-      write_data(file_name,prodM,n,n);
+      // char file_name[30] = "product_P2PN_";
+      // sprintf(file_name+13,"%d",n);
+      // strcat(file_name,".txt");
+      // write_data(file_name,prodM,n,n);
       
    }else{
-      MPI_Irecv(&num_rows,1,MPI_INT,0,0,MPI_COMM_WORLD,&proc_receive1[0]);
-      MPI_Irecv(&num_cols,1,MPI_INT,0,0,MPI_COMM_WORLD,&proc_receive1[1]);
-      MPI_Irecv(&load,1,MPI_INT,0,0,MPI_COMM_WORLD,&proc_receive1[2]);
-      MPI_Waitall(3,proc_receive1,proc_receive_status1);
+      MPI_Irecv(&load,1,MPI_INT,0,0,MPI_COMM_WORLD,&proc_receive1);
+      MPI_Wait(&proc_receive1,&proc_receive_status1);
 
-      MPI_Irecv(&A[0],load*num_cols,MPI_FLOAT,0,0,MPI_COMM_WORLD,&proc_receive2[0]);
-      MPI_Irecv(&B[0],num_rows*num_cols,MPI_FLOAT,0,0,MPI_COMM_WORLD,&proc_receive2[1]);
+      MPI_Irecv(&A[0],load*m,MPI_FLOAT,0,0,MPI_COMM_WORLD,&proc_receive2[0]);
+      MPI_Irecv(&B[0],n*m,MPI_FLOAT,0,0,MPI_COMM_WORLD,&proc_receive2[1]);
       MPI_Waitall(2,proc_receive2,proc_receive_status2);
 
       double val;
       for(int i = 0;i<load;i++){
-         for(int j = 0;j<num_rows;j++){
+         for(int j = 0;j<n;j++){
             val = 0;
-            for(int k = 0;k<num_cols;k++){
-               val+=(A[i*num_cols + k]*B[j*num_cols + k]);
+            for(int k = 0;k<m;k++){
+               val+=(A[i*m + k]*B[j*m + k]);
             }
-            C[i*num_rows+j] = val;
+            C[i*n+j] = val;
          }
       }
 
-      MPI_Isend(&C[0],load*num_rows,MPI_FLOAT,0,0,MPI_COMM_WORLD,&send_req);
+      MPI_Isend(&C[0],load*n,MPI_FLOAT,0,0,MPI_COMM_WORLD,&send_req);
       MPI_Wait(&send_req,&send_stat);
    }
 
